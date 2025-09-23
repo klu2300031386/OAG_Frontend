@@ -10,57 +10,36 @@ const Login = () => {
   const [phone, setPhone] = useState("");
   const navigate = useNavigate();
 
-  const BASE_URL = "https://diagonalley.runasp.net/api/User";
+  const BASE_URL = "http://localhost:8082/api"; 
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
 
     if (currentState === "Sign Up") {
       if (!name || !email || !password || !phone) {
-        Swal.fire({
-          title: "Error!",
-          text: "All fields are required.",
-          icon: "error",
-          button: "OK",
-        });
+        Swal.fire("Error!", "All fields are required.", "error");
         return;
       }
 
       try {
-        const response = await fetch(`${BASE_URL}`, {
+        const response = await fetch(`${BASE_URL}/users`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, email, password, phone }),
         });
 
-        const result = await response.json();
         if (!response.ok) {
-          Swal.fire({
-            title: "Error!",
-            text: result.message || "Failed to create account.",
-            icon: "error",
-            button: "OK",
-          });
+          const result = await response.json();
+          Swal.fire("Error!", result.message || "Failed to create account.", "error");
           return;
         }
 
-        Swal.fire({
-          title: "Success!",
-          text: "Account created successfully! Please log in.",
-          icon: "success",
-          button: "OK",
-        });
-
+        Swal.fire("Success!", "Account created! Please log in.", "success");
         setCurrentState("Login");
         navigate("/login");
       } catch (error) {
         console.error("Sign Up Error:", error);
-        Swal.fire({
-          title: "Error!",
-          text: "An error occurred. Please try again.",
-          icon: "error",
-          button: "OK",
-        });
+        Swal.fire("Error!", "An error occurred. Please try again.", "error");
       }
     } else if (currentState === "Login") {
       try {
@@ -70,29 +49,20 @@ const Login = () => {
           body: JSON.stringify({ email, password }),
         });
 
-        const result = await response.json();
         if (!response.ok) {
-          Swal.fire({
-            title: "Invalid Credentials!",
-            text: result.message || "Invalid email or password.",
-            icon: "error",
-            button: "OK",
-          });
+          const result = await response.json();
+          Swal.fire("Invalid Credentials!", result.message || "Invalid email or password.", "error");
           return;
         }
 
-        localStorage.setItem("userId", result.user.id);
-        localStorage.setItem("userName", result.user.name);
+        const user = await response.json();
+        localStorage.setItem("userId", user.id);
+        localStorage.setItem("userName", user.name);
         window.dispatchEvent(new Event("storage"));
-        navigate("/");  // Navigate to the homepage without page reload
+        navigate("/"); // redirect to homepage
       } catch (error) {
         console.error("Login Error:", error);
-        Swal.fire({
-          title: "Error!",
-          text: "An error occurred. Please try again.",
-          icon: "error",
-          button: "OK",
-        });
+        Swal.fire("Error!", "An error occurred. Please try again.", "error");
       }
     }
   };
@@ -107,6 +77,7 @@ const Login = () => {
         <p className="prata-regular text-3xl">{currentState}</p>
         <hr className="border-none h-[1.5px] w-8 bg-gray-800" />
       </div>
+
       {currentState === "Sign Up" && (
         <>
           <input
@@ -127,6 +98,7 @@ const Login = () => {
           />
         </>
       )}
+
       <input
         type="email"
         className="w-full px-3 py-2 border border-gray-800"
@@ -143,28 +115,21 @@ const Login = () => {
         onChange={(e) => setPassword(e.target.value)}
         required
       />
+
       <div className="w-full flex justify-between text-sm mt-[-8px]">
-        <p className="cursor-pointer">Forget your password</p>
+        <p className="cursor-pointer">Forgot your password?</p>
         {currentState === "Login" ? (
-          <p
-            onClick={() => setCurrentState("Sign Up")}
-            className="cursor-pointer"
-          >
+          <p onClick={() => setCurrentState("Sign Up")} className="cursor-pointer">
             Create account
           </p>
         ) : (
-          <p
-            onClick={() => setCurrentState("Login")}
-            className="cursor-pointer"
-          >
+          <p onClick={() => setCurrentState("Login")} className="cursor-pointer">
             Login Here
           </p>
         )}
       </div>
-      <button
-        type="submit"
-        className="bg-black text-white font-light px-8 py-2 mt-4"
-      >
+
+      <button type="submit" className="bg-black text-white font-light px-8 py-2 mt-4">
         {currentState === "Login" ? "Sign In" : "Sign Up"}
       </button>
     </form>
